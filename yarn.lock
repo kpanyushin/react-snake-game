@@ -1340,6 +1340,11 @@
     estree-walker "^1.0.1"
     picomatch "^2.2.2"
 
+"@rooks/use-did-update@^3.6.0":
+  version "3.6.0"
+  resolved "https://registry.yarnpkg.com/@rooks/use-did-update/-/use-did-update-3.6.0.tgz#bc3344a8ce51d55a4dff044e022e89f6139df11d"
+  integrity sha512-m8R54o3GQnpR2l92foPxERLTtB30TgVtQY5y+t+AFFTqkd+5ZhR5NZPnhRZojtzN1vZXvbUi9Beo4NnIsAyOnQ==
+
 "@sinonjs/commons@^1.7.0":
   version "1.8.1"
   resolved "https://registry.yarnpkg.com/@sinonjs/commons/-/commons-1.8.1.tgz#e7df00f98a203324f6dc7cc606cad9d4a8ab2217"

@@ -1,11 +1,13 @@
 import React from 'react';
 
+import Snake from 'components/Snake';
+
 import s from './App.module.scss';
 
 function App() {
   return (
     <div className={s.root}>
-      Snake Game
+      <Snake cellSize={20} />
     </div>
   );
 }
