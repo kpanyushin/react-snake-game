@@ -58,9 +58,15 @@ function Snake() {
       key === 'ArrowRight' ||
       key === 'ArrowLeft'
     ) {
-      setDirection(directions[key]);
+      if (
+        direction.x + directions[key].x &&
+        direction.y + directions[key].y
+      ) {
+        setDirection(directions[key]);
+      }
     }
   };
+
   const createRandomApple = () => {
     return {
       x: Math.floor((Math.random() * getCanvasSize()) / scale),
