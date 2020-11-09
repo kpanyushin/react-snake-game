@@ -7,7 +7,7 @@ import s from './App.module.scss';
 function App() {
   return (
     <div className={s.root}>
-      <Snake cellSize={20} />
+      <Snake />
     </div>
   );
 }

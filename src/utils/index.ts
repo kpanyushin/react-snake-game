@@ -1,4 +1,4 @@
-import { ICell, FIELD_LENGTH } from 'constants/index';
+import { ICell, FIELD_LENGTH, Direction } from 'constants/index';
 
 /**
  * @function getRandomCoordinate
@@ -32,7 +32,7 @@ export const areSameCoordinates = (a: ICell, b: ICell): boolean => a.x === b.x &
 
 export const getComputedNextHeadCoordinates = (
   headCoordinates: ICell,
-  // direction: Direction,
+  direction: string,
   canvasSize: number | null,
   cellSize: number
 ): ICell | null => {
@@ -40,22 +40,22 @@ export const getComputedNextHeadCoordinates = (
   if (headCoordinates) {
     let { x, y } = headCoordinates;
 
-    // switch (direction) {
-    //   case Direction.Right:
-    //     x += cellSize;
-    //     break;
-    //   case Direction.Left:
-    //     x -= cellSize;
-    //     break;
-    //   case Direction.Up:
-    //     y -= cellSize;
-    //     break;
-    //   case Direction.Down:
-    //     y += cellSize;
-    //     break;
-    //   default:
-    //     return null;
-    // }
+    switch (direction) {
+      case Direction.Right:
+        x += cellSize;
+        break;
+      case Direction.Left:
+        x -= cellSize;
+        break;
+      case Direction.Up:
+        y -= cellSize;
+        break;
+      case Direction.Down:
+        y += cellSize;
+        break;
+      default:
+        return null;
+    }
 
     if (x < 0) {
       x = canvasSize - cellSize;
