@@ -1,13 +1,13 @@
 import React from 'react';
 
-import Snake from 'components/Snake';
+import SnakeGame from 'components/SnakeGame';
 
 import s from './App.module.scss';
 
 function App() {
   return (
     <div className={s.root}>
-      <Snake />
+      <SnakeGame />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useInterval } from 'hooks/index';
 import {
-  apple_start,
+  food_start,
   directions,
   scale,
   snake_start,
@@ -10,15 +10,19 @@ import {
   ICell,
 } from 'constants/index';
 
+import s from './SnakeGame.module.scss';
+
 export const FIELD_LENGTH = 30;
 export const cellSize = 20;
 
-function Snake() {
+function SnakeGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [direction, setDirection] = useState<ICell>(direction_start);
   const [snake, setSnake] = useState<Array<ICell>>(snake_start);
-  const [apple, setApple] = useState<ICell>(apple_start);
+  const [food, setFood] = useState<ICell>(food_start);
   const [speed, setSpeed] = useState<number | null>(null);
+
+  // Canvas helpers and basic functionality
   const getCanvasContext = (): CanvasRenderingContext2D | null => {
     if (canvasRef && canvasRef.current) {
       return canvasRef.current.getContext('2d');
@@ -26,12 +30,14 @@ function Snake() {
 
     return null;
   };
+
   const setCanvasSize = (): void => {
     if (canvasRef && canvasRef.current) {
       canvasRef.current.width = cellSize * FIELD_LENGTH;
       canvasRef.current.height = cellSize * FIELD_LENGTH;
     }
   };
+
   const getCanvasSize = (): number => {
     if (canvasRef && canvasRef.current) {
       const { width: canvasSize } = canvasRef.current.getBoundingClientRect();
@@ -41,6 +47,13 @@ function Snake() {
 
     return 0;
   };
+
+  const focusCanvas = (): void => {
+    if (canvasRef && canvasRef.current) {
+      canvasRef.current.focus();
+    }
+  };
+
   const renderSquare = (x: number, y: number, color: string): void => {
     const ctx = getCanvasContext();
 
@@ -49,6 +62,35 @@ function Snake() {
       ctx.fillRect(x, y, 1, 1);
     }
   };
+
+  const renderGrid = (): void => {
+    const context = getCanvasContext();
+    if (context) {
+      context.setTransform(scale, 0, 0, scale, 0, 0);
+      const canvasSize = getCanvasSize();
+      context.clearRect(0, 0, canvasSize, canvasSize);
+      if (context) {
+        context.fillStyle = '#DDDDDD';
+        context.strokeStyle = '#FFFFFF';
+        context.fillRect(0, 0, canvasSize, canvasSize);
+        context.lineWidth = 1 / scale;
+
+        for (let x = 1; x < canvasSize; x += 1) {
+          context.moveTo(x, 0);
+          context.lineTo(x, canvasSize);
+        }
+
+        for (let y = 0; y < canvasSize; y += 1) {
+          context.moveTo(0, y);
+          context.lineTo(canvasSize, y);
+        }
+
+        context.stroke();
+      }
+    }
+  };
+
+  // Snake game general logic
   const moveSnake = (event: React.KeyboardEvent) => {
     const { key } = event;
     // Check if key is one of the arrows
@@ -67,28 +109,20 @@ function Snake() {
     }
   };
 
-  const createRandomApple = () => {
+  const createRandomFood = () => {
     return {
       x: Math.floor((Math.random() * getCanvasSize()) / scale),
       y: Math.floor((Math.random() * getCanvasSize()) / scale),
     };
   };
-  const startGame = () => {
-    setSnake(snake_start);
-    setApple(apple_start);
-    setDirection(direction_start);
-    setSpeed(initial_speed);
-  };
-  const endGame = () => {
-    setSpeed(null);
-  };
 
-  const checkCollision = (piece: ICell, snoko: ICell[] = snake) => {
-    for (const segment of snoko) {
+  const checkCollision = (piece: ICell, _snake: ICell[] = snake) => {
+    // Check snake collisions
+    for (const segment of _snake) {
       if (piece.x === segment.x && piece.y === segment.y) return true;
     }
 
-    // Wall Collision Detection
+    // Check walls collisions
     if (
       piece.x * scale >= getCanvasSize() ||
       piece.x < 0 ||
@@ -100,57 +134,46 @@ function Snake() {
 
     return false;
   };
-  const checkAppleCollision = (newSnake: ICell[]) => {
-    if (newSnake[0].x === apple.x && newSnake[0].y === apple.y) {
-      let newApple = createRandomApple();
-      while (checkCollision(newApple, newSnake)) {
-        newApple = createRandomApple();
+
+  const checkFoodCollision = (newSnake: ICell[]) => {
+    if (newSnake[0].x === food.x && newSnake[0].y === food.y) {
+      let newFood = createRandomFood();
+      while (checkCollision(newFood, newSnake)) {
+        newFood = createRandomFood();
       }
-      setApple(newApple);
+      setFood(newFood);
       return true;
     }
     return false;
   };
 
-  const gameLoop = () => {
-    const snakeCopy = [...snake]; // Create shallow copy to avoid mutating array
-    const newSnakeHead: ICell = {
-      x: snakeCopy[0].x + direction.x,
-      y: snakeCopy[0].y + direction.y,
-    };
-    snakeCopy.unshift(newSnakeHead);
-    if (checkCollision(newSnakeHead)) endGame();
-    if (!checkAppleCollision(snakeCopy)) snakeCopy.pop();
-    setSnake(snakeCopy);
+  const startGame = () => {
+    focusCanvas();
+    setSnake(snake_start);
+    setFood(food_start);
+    setDirection(direction_start);
+    setSpeed(initial_speed);
   };
 
-  const renderGrid = (): void => {
-    const context = getCanvasContext();
-    if (!context) {
-      throw new Error('Could not get context');
-    }
-    context.setTransform(scale, 0, 0, scale, 0, 0);
-    const canvasSize = getCanvasSize();
-    context.clearRect(0, 0, canvasSize, canvasSize);
-    if (context) {
-      context.fillStyle = '#DDDDDD';
-      context.strokeStyle = '#FFFFFF';
-      context.fillRect(0, 0, canvasSize, canvasSize);
-      context.lineWidth = 1 / scale;
+  const endGame = () => {
+    setSpeed(null);
+  };
 
-      for (let x = 1; x < canvasSize; x += 1) {
-        context.moveTo(x, 0);
-        context.lineTo(x, canvasSize);
-      }
+  const gameLoop = () => {
+    const newSnake = [...snake];
+    const newSnakeHead: ICell = {
+      x: newSnake[0].x + direction.x,
+      y: newSnake[0].y + direction.y,
+    };
+    newSnake.unshift(newSnakeHead);
+    if (checkCollision(newSnakeHead)) endGame();
+    if (!checkFoodCollision(newSnake)) newSnake.pop();
+    setSnake(newSnake);
+  };
 
-      for (let y = 0; y < canvasSize; y += 1) {
-        context.moveTo(0, y);
-        context.lineTo(canvasSize, y);
-      }
-
-      context.stroke();
-    }
-  }
+  const handleKeyDown = (e: React.KeyboardEvent): void => {
+    moveSnake(e);
+  };
 
   useEffect(() => {
     setCanvasSize();
@@ -158,37 +181,27 @@ function Snake() {
 
   useEffect(() => {
     const context = getCanvasContext();
-    if (!context) {
-      throw new Error('Could not get context');
+    if (context) {
+      renderGrid();
+      snake.forEach(({ x, y }) => renderSquare(x, y, 'green'));
+      renderSquare(food.x, food.y, 'red');
     }
-    renderGrid();
-    // Draw Snake
-    snake.forEach(({ x, y }) => renderSquare(x, y, 'green'));
-    // Draw Apple
-    context.fillStyle = 'red';
-    renderSquare(apple.x, apple.y, 'red');
-  }, [snake, apple]);
+  }, [snake, food]);
 
   useInterval(() => gameLoop(), speed);
 
   return (
-    <div className="">
-      <div>Classic Snake Game</div>
-      <div
-        // className="controls"
-        role="button"
-        onKeyDown={(event: React.KeyboardEvent) => moveSnake(event)}
-      >
-        <canvas
-          style={{ border: '1px solid black' }}
-          ref={canvasRef}
-          // width={canvas_size.x}
-          // height={canvas_size.y}
-        />
-        <button onClick={startGame}>Start Game</button>
-      </div>
+    <div className={s.wrapper}>
+      <div>Snake</div>
+      <canvas
+        className={s.canvas}
+        tabIndex={0}
+        ref={canvasRef}
+        onKeyDown={handleKeyDown}
+      />
+      <button onClick={startGame}>Start Game</button>
     </div>
   );
 }
 
-export default Snake;
+export default SnakeGame;
