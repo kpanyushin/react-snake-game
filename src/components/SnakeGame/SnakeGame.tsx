@@ -1,26 +1,32 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useInterval } from 'hooks/index';
+import { useInterval } from 'hooks/useInterval';
 import {
-  food_start,
-  directions,
-  scale,
-  snake_start,
-  initial_speed,
-  direction_start,
   ICell,
+  COLOR_RED,
+  FOOD_START,
+  DIRECTIONS,
+  COLOR_GRAY,
+  ISnakeProps,
+  COLOR_GREEN,
+  COLOR_WHITE,
+  CANVAS_SCALE,
+  INITIAL_SPEED,
+  DIRECTION_START,
+  INITIAL_SNAKE_POS,
 } from 'constants/index';
 
 import s from './SnakeGame.module.scss';
 
-export const FIELD_LENGTH = 30;
-export const cellSize = 20;
-
-function SnakeGame() {
+const SnakeGame = ({ cellSize, fieldLength }: ISnakeProps) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [direction, setDirection] = useState<ICell>(direction_start);
-  const [snake, setSnake] = useState<Array<ICell>>(snake_start);
-  const [food, setFood] = useState<ICell>(food_start);
+  const [direction, setDirection] = useState<ICell>(DIRECTION_START);
+  const [snake, setSnake] = useState<Array<ICell>>(INITIAL_SNAKE_POS);
+  const [food, setFood] = useState<ICell>(FOOD_START);
   const [speed, setSpeed] = useState<number | null>(null);
+  const [score, setScore] = useState<number>(0);
+  const [started, setStarted] = useState<boolean>(false);
+  const [level, setLevel] = useState<number>(1);
+  const [isOver, setIsOver] = useState<boolean>(false);
 
   // Canvas helpers and basic functionality
   const getCanvasContext = (): CanvasRenderingContext2D | null => {
@@ -33,8 +39,8 @@ function SnakeGame() {
 
   const setCanvasSize = (): void => {
     if (canvasRef && canvasRef.current) {
-      canvasRef.current.width = cellSize * FIELD_LENGTH;
-      canvasRef.current.height = cellSize * FIELD_LENGTH;
+      canvasRef.current.width = cellSize * fieldLength;
+      canvasRef.current.height = cellSize * fieldLength;
     }
   };
 
@@ -66,68 +72,57 @@ function SnakeGame() {
   const renderGrid = (): void => {
     const context = getCanvasContext();
     if (context) {
-      context.setTransform(scale, 0, 0, scale, 0, 0);
+      context.setTransform(CANVAS_SCALE, 0, 0, CANVAS_SCALE, 0, 0);
       const canvasSize = getCanvasSize();
       context.clearRect(0, 0, canvasSize, canvasSize);
-      if (context) {
-        context.fillStyle = '#DDDDDD';
-        context.strokeStyle = '#FFFFFF';
-        context.fillRect(0, 0, canvasSize, canvasSize);
-        context.lineWidth = 1 / scale;
+      context.fillStyle = COLOR_GRAY;
+      context.strokeStyle = COLOR_WHITE;
+      context.fillRect(0, 0, canvasSize, canvasSize);
+      context.lineWidth = 1 / CANVAS_SCALE;
 
-        for (let x = 1; x < canvasSize; x += 1) {
-          context.moveTo(x, 0);
-          context.lineTo(x, canvasSize);
-        }
-
-        for (let y = 0; y < canvasSize; y += 1) {
-          context.moveTo(0, y);
-          context.lineTo(canvasSize, y);
-        }
-
-        context.stroke();
+      for (let x = 1; x < canvasSize; x += 1) {
+        context.moveTo(x, 0);
+        context.lineTo(x, canvasSize);
       }
+
+      for (let y = 0; y < canvasSize; y += 1) {
+        context.moveTo(0, y);
+        context.lineTo(canvasSize, y);
+      }
+
+      context.stroke();
     }
   };
 
   // Snake game general logic
-  const moveSnake = (event: React.KeyboardEvent) => {
-    const { key } = event;
-    // Check if key is one of the arrows
+  const moveSnake = (_direction: string) => {
     if (
-      key === 'ArrowUp' ||
-      key === 'ArrowDown' ||
-      key === 'ArrowRight' ||
-      key === 'ArrowLeft'
+      direction.x + DIRECTIONS[_direction].x &&
+      direction.y + DIRECTIONS[_direction].y
     ) {
-      if (
-        direction.x + directions[key].x &&
-        direction.y + directions[key].y
-      ) {
-        setDirection(directions[key]);
-      }
+      setDirection(DIRECTIONS[_direction]);
     }
   };
 
-  const createRandomFood = () => {
-    return {
-      x: Math.floor((Math.random() * getCanvasSize()) / scale),
-      y: Math.floor((Math.random() * getCanvasSize()) / scale),
-    };
-  };
+  const createRandomFood = (): ICell => ({
+    x: Math.floor((Math.random() * getCanvasSize()) / CANVAS_SCALE),
+    y: Math.floor((Math.random() * getCanvasSize()) / CANVAS_SCALE),
+  });
 
-  const checkCollision = (piece: ICell, _snake: ICell[] = snake) => {
+  const checkCollision = (part: ICell, _snake: ICell[] = snake): boolean => {
     // Check snake collisions
     for (const segment of _snake) {
-      if (piece.x === segment.x && piece.y === segment.y) return true;
+      if (part.x === segment.x && part.y === segment.y) {
+        return true;
+      }
     }
 
     // Check walls collisions
     if (
-      piece.x * scale >= getCanvasSize() ||
-      piece.x < 0 ||
-      piece.y * scale >= getCanvasSize() ||
-      piece.y < 0
+      part.x * CANVAS_SCALE >= getCanvasSize() ||
+      part.x < 0 ||
+      part.y * CANVAS_SCALE >= getCanvasSize() ||
+      part.y < 0
     ) {
       return true;
     }
@@ -135,31 +130,41 @@ function SnakeGame() {
     return false;
   };
 
-  const checkFoodCollision = (newSnake: ICell[]) => {
+  const checkFoodCollision = (newSnake: ICell[]): boolean => {
     if (newSnake[0].x === food.x && newSnake[0].y === food.y) {
       let newFood = createRandomFood();
       while (checkCollision(newFood, newSnake)) {
         newFood = createRandomFood();
       }
       setFood(newFood);
+      setScore(prevScore => prevScore + 1);
+      if (score > 0 && score % 3 === 0 && speed && speed > 30) {
+        setLevel(prevLevel => prevLevel + 1);
+        setSpeed(prevSpeed => prevSpeed && prevSpeed - 30);
+      }
+
       return true;
     }
+
     return false;
   };
 
-  const startGame = () => {
+  const startGame = (): void => {
     focusCanvas();
-    setSnake(snake_start);
-    setFood(food_start);
-    setDirection(direction_start);
-    setSpeed(initial_speed);
+    setStarted(true);
+    setIsOver(false);
+    setSnake(INITIAL_SNAKE_POS);
+    setFood(FOOD_START);
+    setDirection(DIRECTION_START);
+    setSpeed(INITIAL_SPEED);
   };
 
-  const endGame = () => {
+  const endGame = (): void => {
     setSpeed(null);
+    setIsOver(true);
   };
 
-  const gameLoop = () => {
+  const gameLoop = (): void => {
     const newSnake = [...snake];
     const newSnakeHead: ICell = {
       x: newSnake[0].x + direction.x,
@@ -172,7 +177,16 @@ function SnakeGame() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent): void => {
-    moveSnake(e);
+    const { key } = e;
+    // Check if key is one of the arrows
+    if (
+      key === 'ArrowUp' ||
+      key === 'ArrowDown' ||
+      key === 'ArrowRight' ||
+      key === 'ArrowLeft'
+    ) {
+      moveSnake(key);
+    }
   };
 
   useEffect(() => {
@@ -183,23 +197,33 @@ function SnakeGame() {
     const context = getCanvasContext();
     if (context) {
       renderGrid();
-      snake.forEach(({ x, y }) => renderSquare(x, y, 'green'));
-      renderSquare(food.x, food.y, 'red');
+      snake.forEach(({ x, y }) => renderSquare(x, y, COLOR_GREEN));
+      renderSquare(food.x, food.y, COLOR_RED);
     }
   }, [snake, food]);
 
   useInterval(() => gameLoop(), speed);
 
   return (
-    <div className={s.wrapper}>
-      <div>Snake</div>
-      <canvas
-        className={s.canvas}
-        tabIndex={0}
-        ref={canvasRef}
-        onKeyDown={handleKeyDown}
-      />
-      <button onClick={startGame}>Start Game</button>
+    <div className={s.root}>
+      <div className={s.canvasWrapper}>
+        <canvas
+          className={s.canvas}
+          tabIndex={0}
+          ref={canvasRef}
+          onKeyDown={handleKeyDown}
+        />
+        {(!started || isOver) && (
+          <button className={s.startBtn} onClick={startGame}>
+            {isOver ? 'Try again' : 'Start Game'}
+          </button>
+        )}
+        {isOver && (
+          <p className={s.gameOverMsg}>You have failed this snake</p>
+        )}
+      </div>
+      <p>Your score: {score}</p>
+      <p>Current level: {level}</p>
     </div>
   );
 }

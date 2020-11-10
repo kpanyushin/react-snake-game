@@ -1,9 +1,4 @@
-export enum Direction {
-  Up = 'up',
-  Down = 'down',
-  Left = 'left',
-  Right = 'right'
-}
+// types and interfaces
 
 export interface ICell {
   x: number,
@@ -12,36 +7,31 @@ export interface ICell {
 
 export interface ISnakeProps {
   cellSize: number,
+  fieldLength: number,
 }
 
-export interface ISnakeState {
-  snakeSize: number,
-  snakeCoordinates: Array<ICell>,
+type directionsType = {
+  [key: string]: ICell,
 }
 
-export type directionType = {
-  x: number,
-  y: number,
-}
+// initial states
 
-export type directionsType = {
-  [key: string]: directionType,
-}
-
-export const canvasScale = 40;
-export const FIELD_LENGTH = 30;
-export const GRAY_COLOR = '#949494';
-export const INITIAL_SNAKE_SIZE = 5;
-export const WHITE_COLOR = '#ffffff';
-
-export const snake_start = [{ x: 8, y: 7 }, { x: 8, y: 8 }];
-export const direction_start = { x: 0, y: -1 };
-export const food_start = { x: 8, y: 3 };
-export const scale = 15;
-export const initial_speed = 200;
-export const directions = {
+export const INITIAL_SNAKE_SIZE: number = 5;
+export const INITIAL_SNAKE_POS: Array<ICell> = [{ x: 8, y: 7 }, { x: 8, y: 8 }];
+export const DIRECTION_START: ICell = { x: 0, y: -1 };
+export const FOOD_START: ICell = { x: 8, y: 3 };
+export const CANVAS_SCALE: number = 20;
+export const INITIAL_SPEED: number = 270;
+export const DIRECTIONS: directionsType = {
   ArrowUp: { x: 0, y: -1 },
   ArrowDown: { x: 0, y: 1 },
   ArrowLeft: { x: -1, y: 0 },
   ArrowRight: { x: 1, y: 0 },
 };
+
+// colors
+
+export const COLOR_RED = 'red';
+export const COLOR_GREEN = 'green';
+export const COLOR_GRAY = '#DDDDDD';
+export const COLOR_WHITE = '#FFFFFF';
