@@ -138,9 +138,9 @@ const SnakeGame = ({ cellSize, fieldLength }: ISnakeProps) => {
       }
       setFood(newFood);
       setScore(prevScore => prevScore + 1);
-      if (score > 0 && score % 3 === 0 && speed && speed > 30) {
+      if (speed && speed > 10) {
         setLevel(prevLevel => prevLevel + 1);
-        setSpeed(prevSpeed => prevSpeed && prevSpeed - 30);
+        setSpeed(prevSpeed => prevSpeed && prevSpeed - 10);
       }
 
       return true;
