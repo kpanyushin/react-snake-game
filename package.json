@@ -1,7 +1,7 @@
 {
   "name": "react-snake",
   "version": "1.0.0",
-  "homepage": "https://github.com/kpanyushin/react-snake-game",
+  "homepage": "https://kpanyushin.github.io/react-snake-game/",
   "dependencies": {
     "@rooks/use-did-update": "^3.6.0",
     "@types/node": "^12.0.0",
